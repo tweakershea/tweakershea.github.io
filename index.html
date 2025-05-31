@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Custom Phrase Bingo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f0f0;
+      overflow: hidden;
+      position: relative;
+    }
+    table {
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      z-index: 1;
+    }
+    td {
+      width: 100px;
+      height: 100px;
+      text-align: center;
+      vertical-align: middle;
+      border: 1px solid #333;
+      background: white;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 5px;
+      transition: background 0.2s, filter 0.2s;
+    }
+    td:hover {
+      filter: brightness(85%);
+    }
+    td.free {
+      background: #ddd;
+      font-weight: bold;
+    }
+        .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: red;
+      animation: explode 3s linear forwards;
+      z-index: 200000000000000;
+    }
+@keyframes explode {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(calc(var(--x) * 0.5), calc(var(--y) * 0.5)) rotate(calc(var(--rotation) * 0.5));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), var(--y)) rotate(var(--rotation));
+  }
+}
+
+
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 64px;
+      font-weight: bold;
+      display: none;
+      z-index: 10; /* Lower than buttons */
+      pointer-events: auto;
+      cursor: default;
+      user-select: none;
+    }
+    .buttons-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20; /* Above overlay */
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #4caf50;
+      color: white;
+      position: relative;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">WINNER!</div>
+  <table id="bingoCard"></table>
+  <div class="buttons-container">
+    <button id="reshuffleBtn">Reshuffle</button>
+    <button id="resetBtn">Reset Marks</button>
+  </div>
+
+  <script>
+    const phrases = [
+      "😴",
+      "So if your mom's name is George...",
+      "Neck Thing",
+      "Kicked by a Horse",
+      "HONK GANG!",
+      "Dispensary Run",
+      "tbh.",
+      "*heavy breathing*",
+      "EVIDENCE PACKET",
+      "😭",
+      "Mentioning her sister",
+      "Ceiling Story.",
+      "Felonious Slander",
+      "UR BANNED BUD",
+      "Dogshit Music",
+      "Nick's Fault",
+      "🍇",
+      "Adderall 🤤",
+      "\"They're jealous.\"",
+      "\"I have a medical condition.\"",
+      "abby goes for a walk",
+      "Adsense farming",
+      "\"Alright guys...\"",
+      "Simp Dono",
+      "DVR off",
+      "Ciggy Break",
+      "Gloryhole",
+      "YIKES!",
+      "👙",
+      "Dono SCAMMED!",
+      "muh onlyfans",
+      "dayoos ex mawkinuh",
+      "🫦",
+      "INTP",
+      "I'm a YouTuber.",
+      "\"I have a job.\"",
+      "f slur",
+      "🐵",
+      "Business Law btw",
+      "👵🏻"
+    ];
+
+    let bingoTriggered = false;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function generateConfettiFromCenter() {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      let rounds = 3; 
+      let count = 0;
+      const interval = setInterval(() => {
+        for (let i = 0; i < 300; i++) {
+          const confetti = document.createElement("div");
+          confetti.classList.add("confetti");
+          const size = Math.random() * 8 + 4;
+          confetti.style.width = `${size}px`;
+          confetti.style.height = `${size}px`;
+          confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
+          confetti.style.left = `${centerX}px`;
+          confetti.style.top = `${centerY}px`;
+          confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+
+          // CIRCULAR SPREAD
+          const angle = Math.random() * 2 * Math.PI;
+          const radius = Math.random() * Math.max(window.innerWidth, window.innerHeight) * 1.2;
+          const offsetX = Math.cos(angle) * radius;
+          const offsetY = Math.sin(angle) * radius;
+
+          confetti.style.setProperty("--x", `${offsetX}px`);
+          confetti.style.setProperty("--y", `${offsetY}px`);
+          confetti.style.setProperty("--rotation", `${Math.random() * 1440 + 720}deg`);
+
+          document.body.appendChild(confetti);
+          setTimeout(() => confetti.remove(), 3000);
+        }
+        count++;
+        if (count >= rounds) clearInterval(interval);
+      }, 300);
+    }
+
+
+
+
+    function checkBingo() {
+      if (bingoTriggered) return;
+      const table = document.getElementById("bingoCard");
+      const rows = table.rows;
+      let bingo = false;
+
+      for (let r = 0; r < 5; r++) {
+        let complete = true;
+        for (let c = 0; c < 5; c++) {
+          if (rows[r].cells[c].style.background !== "lightgreen" && !(r === 2 && c === 2))
+            complete = false;
+        }
+        if (complete) bingo = true;
+      }
+
+      for (let c = 0; c < 5; c++) {
+        let complete = true;
+        for (let r = 0; r < 5; r++) {
+          if (rows[r].cells[c].style.background !== "lightgreen" && !(r === 2 && c === 2))
+            complete = false;
+        }
+        if (complete) bingo = true;
+      }
+
+      let diag1 = true;
+      let diag2 = true;
+      for (let i = 0; i < 5; i++) {
+        if (rows[i].cells[i].style.background !== "lightgreen" && !(i === 2 && i === 2)) diag1 = false;
+        if (
+          rows[i].cells[4 - i].style.background !== "lightgreen" &&
+          !(i === 2 && 4 - i === 2)
+        )
+          diag2 = false;
+      }
+      if (diag1 || diag2) bingo = true;
+
+      if (bingo) {
+        bingoTriggered = true;
+        document.getElementById("overlay").style.display = "flex";
+        generateConfettiFromCenter();
+      }
+    }
+
+    function generateBingoCard() {
+      bingoTriggered = false;
+      document.getElementById("overlay").style.display = "none";
+      const table = document.getElementById("bingoCard");
+      table.innerHTML = "";
+      const shuffledPhrases = shuffle([...phrases]).slice(0, 24);
+
+      let phraseIndex = 0;
+    for (let row = 0; row < 5; row++) {
+      const tr = document.createElement("tr");
+      for (let col = 0; col < 5; col++) {
+        const td = document.createElement("td");
+        if (row === 2 && col === 2) {
+          td.textContent = "Borderline Personality Disorder";
+          td.classList.add("free");
+          td.style.background = "lightgreen";
+          // No click event on free space
+        } else {
+          td.textContent = shuffledPhrases[phraseIndex++];
+            if (/^[\p{Emoji}\p{Extended_Pictographic}]+$/u.test(td.textContent.trim())) {
+              td.style.fontSize = "3em";
+            }
+          td.addEventListener("click", () => {
+            if (bingoTriggered) return;
+            const isSelected = td.style.background === "lightgreen";
+            td.style.background = isSelected ? "white" : "lightgreen";
+            td.style.fontWeight = isSelected ? "normal" : "bold";
+            checkBingo();
+          });
+        }
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+
+    }
+
+    function resetMarks() {
+      const table = document.getElementById("bingoCard");
+      for (let row of table.rows) {
+        for (let cell of row.cells) {
+          if (!cell.classList.contains("free")) {
+            cell.style.background = "white";
+          }
+        }
+      }
+      bingoTriggered = false;
+      document.getElementById("overlay").style.display = "none";
+    }
+
+    document.getElementById("reshuffleBtn").addEventListener("click", generateBingoCard);
+    document.getElementById("resetBtn").addEventListener("click", resetMarks);
+    window.onload = generateBingoCard;
+  </script>
+</body>
+</html>
